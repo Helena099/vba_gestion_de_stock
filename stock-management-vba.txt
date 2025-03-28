@@ -1,0 +1,581 @@
+' Code pour l'interface de gestion des stocks en VBA
+' Développé pour le Project 2
+
+Option Explicit
+
+' Variables globales
+Dim ws As Worksheet
+Dim wsHistory As Worksheet
+Dim wsReports As Worksheet
+
+' Structure pour les produits
+Type Product
+    ID As String
+    Name As String
+    Quantity As Integer
+    AlertThreshold As Integer
+    LastUpdate As Date
+End Type
+
+' -----------------------------------------
+' FORMULAIRE PRINCIPAL DE GESTION DES STOCKS
+' -----------------------------------------
+
+' Créer la feuille principale et les données initiales
+Public Sub InitializeStockManagement()
+    ' Vérifier si les feuilles existent déjà
+    On Error Resume Next
+    
+    ' Créer ou réinitialiser la feuille principale
+    If Not SheetExists("Stock") Then
+        Set ws = ThisWorkbook.Sheets.Add
+        ws.Name = "Stock"
+    Else
+        Set ws = ThisWorkbook.Sheets("Stock")
+        ws.Cells.Clear
+    End If
+    
+    ' Créer ou réinitialiser la feuille d'historique
+    If Not SheetExists("Historique") Then
+        Set wsHistory = ThisWorkbook.Sheets.Add
+        wsHistory.Name = "Historique"
+    Else
+        Set wsHistory = ThisWorkbook.Sheets("Historique")
+        wsHistory.Cells.Clear
+    End If
+    
+    ' Créer ou réinitialiser la feuille de rapports
+    If Not SheetExists("Rapports") Then
+        Set wsReports = ThisWorkbook.Sheets.Add
+        wsReports.Name = "Rapports"
+    Else
+        Set wsReports = ThisWorkbook.Sheets("Rapports")
+        wsReports.Cells.Clear
+    End If
+    
+    On Error GoTo 0
+    
+    ' Formater la feuille Stock
+    With ws
+        ' En-têtes
+        .Range("A1").Value = "ID Produit"
+        .Range("B1").Value = "Nom"
+        .Range("C1").Value = "Quantité"
+        .Range("D1").Value = "Seuil d'alerte"
+        .Range("E1").Value = "Date de mise à jour"
+        .Range("A1:E1").Font.Bold = True
+        .Range("A1:E1").Interior.Color = RGB(70, 114, 196)
+        .Range("A1:E1").Font.Color = RGB(255, 255, 255)
+        
+        ' Ajuster la largeur des colonnes
+        .Columns("A:E").AutoFit
+        .Columns("B").ColumnWidth = 30
+    End With
+    
+    ' Formater la feuille Historique
+    With wsHistory
+        ' En-têtes
+        .Range("A1").Value = "Date"
+        .Range("B1").Value = "ID Produit"
+        .Range("C1").Value = "Nom Produit"
+        .Range("D1").Value = "Type de mouvement"
+        .Range("E1").Value = "Quantité"
+        .Range("F1").Value = "Utilisateur"
+        .Range("G1").Value = "Commentaire"
+        .Range("A1:G1").Font.Bold = True
+        .Range("A1:G1").Interior.Color = RGB(70, 114, 196)
+        .Range("A1:G1").Font.Color = RGB(255, 255, 255)
+        
+        ' Ajuster la largeur des colonnes
+        .Columns("A:G").AutoFit
+        .Columns("C").ColumnWidth = 30
+        .Columns("G").ColumnWidth = 40
+    End With
+    
+    ' Ajouter quelques données d'exemple
+    AddSampleData
+    
+    ' Afficher le formulaire de gestion
+    ShowStockManagementForm
+End Sub
+
+' Fonction pour vérifier si une feuille existe
+Private Function SheetExists(SheetName As String) As Boolean
+    Dim sht As Worksheet
+    
+    On Error Resume Next
+    Set sht = ThisWorkbook.Sheets(SheetName)
+    On Error GoTo 0
+    
+    SheetExists = Not sht Is Nothing
+End Function
+
+' Ajouter des données d'exemple
+Private Sub AddSampleData()
+    ' Produits d'exemple
+    With ws
+        .Range("A2").Value = "P001"
+        .Range("B2").Value = "Écran LCD 24"""
+        .Range("C2").Value = 15
+        .Range("D2").Value = 5
+        .Range("E2").Value = Date
+        
+        .Range("A3").Value = "P002"
+        .Range("B3").Value = "Clavier sans fil"
+        .Range("C3").Value = 25
+        .Range("D3").Value = 10
+        .Range("E3").Value = Date
+        
+        .Range("A4").Value = "P003"
+        .Range("B4").Value = "Souris optique"
+        .Range("C4").Value = 8
+        .Range("D4").Value = 10
+        .Range("E4").Value = Date
+        
+        .Range("A5").Value = "P004"
+        .Range("B5").Value = "Disque dur externe 1TB"
+        .Range("C5").Value = 12
+        .Range("D5").Value = 5
+        .Range("E5").Value = Date
+    End With
+    
+    ' Historique d'exemple
+    With wsHistory
+        .Range("A2").Value = Date - 5
+        .Range("B2").Value = "P001"
+        .Range("C2").Value = "Écran LCD 24"""
+        .Range("D2").Value = "Entrée"
+        .Range("E2").Value = 20
+        .Range("F2").Value = "Admin"
+        .Range("G2").Value = "Stock initial"
+        
+        .Range("A3").Value = Date - 2
+        .Range("B3").Value = "P001"
+        .Range("C3").Value = "Écran LCD 24"""
+        .Range("D3").Value = "Sortie"
+        .Range("E3").Value = -5
+        .Range("F3").Value = "Martin D."
+        .Range("G3").Value = "Livraison client #A2589"
+    End With
+End Sub
+
+' Afficher le formulaire principal de gestion des stocks
+Public Sub ShowStockManagementForm()
+    frmStockManagement.Show
+End Sub
+
+' -----------------------------------------
+' FONCTIONS DE GESTION DES STOCKS
+' -----------------------------------------
+
+' Rechercher un produit par ID ou nom
+Public Function FindProduct(SearchValue As String) As Range
+    Dim SearchRange As Range
+    
+    ' Rechercher d'abord dans la colonne ID (A)
+    Set SearchRange = ws.Range("A:A").Find(SearchValue, LookIn:=xlValues, LookAt:=xlWhole)
+    
+    ' Si non trouvé, rechercher dans la colonne Nom (B)
+    If SearchRange Is Nothing Then
+        Set SearchRange = ws.Range("B:B").Find(SearchValue, LookIn:=xlValues, LookAt:=xlPart)
+    End If
+    
+    Set FindProduct = SearchRange
+End Function
+
+' Ajouter un nouveau produit
+Public Sub AddProduct(ID As String, Name As String, Quantity As Integer, AlertThreshold As Integer)
+    Dim LastRow As Long
+    
+    ' Vérifier si le produit existe déjà
+    If Not FindProduct(ID) Is Nothing Then
+        MsgBox "Un produit avec cet ID existe déjà.", vbExclamation, "Erreur"
+        Exit Sub
+    End If
+    
+    ' Trouver la dernière ligne utilisée
+    LastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row + 1
+    
+    ' Ajouter le produit
+    ws.Cells(LastRow, 1).Value = ID
+    ws.Cells(LastRow, 2).Value = Name
+    ws.Cells(LastRow, 3).Value = Quantity
+    ws.Cells(LastRow, 4).Value = AlertThreshold
+    ws.Cells(LastRow, 5).Value = Date
+    
+    ' Ajouter l'entrée dans l'historique
+    AddToHistory ID, Name, "Ajout", Quantity, "Nouveau produit ajouté"
+    
+    ' Vérifier le seuil d'alerte
+    CheckAlertThreshold ID, Name, Quantity, AlertThreshold
+End Sub
+
+' Modifier un produit existant
+Public Sub UpdateProduct(ID As String, NewQuantity As Integer, Reason As String)
+    Dim FoundCell As Range
+    Dim OldQuantity As Integer
+    Dim ProductName As String
+    Dim QuantityDiff As Integer
+    Dim MoveType As String
+    
+    ' Rechercher le produit
+    Set FoundCell = FindProduct(ID)
+    
+    If FoundCell Is Nothing Then
+        MsgBox "Produit non trouvé.", vbExclamation, "Erreur"
+        Exit Sub
+    End If
+    
+    ' Récupérer les données actuelles
+    OldQuantity = ws.Cells(FoundCell.Row, 3).Value
+    ProductName = ws.Cells(FoundCell.Row, 2).Value
+    QuantityDiff = NewQuantity - OldQuantity
+    
+    ' Mettre à jour la quantité
+    ws.Cells(FoundCell.Row, 3).Value = NewQuantity
+    ws.Cells(FoundCell.Row, 5).Value = Date
+    
+    ' Déterminer le type de mouvement
+    If QuantityDiff > 0 Then
+        MoveType = "Entrée"
+    ElseIf QuantityDiff < 0 Then
+        MoveType = "Sortie"
+    Else
+        MoveType = "Correction"
+    End If
+    
+    ' Ajouter l'entrée dans l'historique
+    AddToHistory ID, ProductName, MoveType, QuantityDiff, Reason
+    
+    ' Vérifier le seuil d'alerte
+    CheckAlertThreshold ID, ProductName, NewQuantity, ws.Cells(FoundCell.Row, 4).Value
+End Sub
+
+' Supprimer un produit
+Public Sub DeleteProduct(ID As String)
+    Dim FoundCell As Range
+    Dim ProductName As String
+    
+    ' Rechercher le produit
+    Set FoundCell = FindProduct(ID)
+    
+    If FoundCell Is Nothing Then
+        MsgBox "Produit non trouvé.", vbExclamation, "Erreur"
+        Exit Sub
+    End If
+    
+    ' Récupérer le nom du produit
+    ProductName = ws.Cells(FoundCell.Row, 2).Value
+    
+    ' Confirmer la suppression
+    If MsgBox("Êtes-vous sûr de vouloir supprimer le produit """ & ProductName & """ ?", _
+              vbYesNo + vbQuestion, "Confirmation") = vbYes Then
+        
+        ' Ajouter l'entrée dans l'historique
+        AddToHistory ID, ProductName, "Suppression", 0, "Produit supprimé"
+        
+        ' Supprimer la ligne
+        ws.Rows(FoundCell.Row).Delete
+    End If
+End Sub
+
+' Ajouter une entrée dans l'historique
+Public Sub AddToHistory(ID As String, Name As String, MoveType As String, Quantity As Integer, Comment As String)
+    Dim LastRow As Long
+    Dim CurrentUser As String
+    
+    ' Obtenir le nom d'utilisateur actuel
+    CurrentUser = Application.UserName
+    
+    ' Trouver la dernière ligne utilisée
+    LastRow = wsHistory.Cells(wsHistory.Rows.Count, "A").End(xlUp).Row + 1
+    
+    ' Ajouter l'entrée
+    wsHistory.Cells(LastRow, 1).Value = Now
+    wsHistory.Cells(LastRow, 2).Value = ID
+    wsHistory.Cells(LastRow, 3).Value = Name
+    wsHistory.Cells(LastRow, 4).Value = MoveType
+    wsHistory.Cells(LastRow, 5).Value = Quantity
+    wsHistory.Cells(LastRow, 6).Value = CurrentUser
+    wsHistory.Cells(LastRow, 7).Value = Comment
+    
+    ' Formater la date
+    wsHistory.Cells(LastRow, 1).NumberFormat = "dd/mm/yyyy hh:mm:ss"
+End Sub
+
+' Vérifier le seuil d'alerte
+Public Sub CheckAlertThreshold(ID As String, Name As String, CurrentQuantity As Integer, AlertThreshold As Integer)
+    If CurrentQuantity <= AlertThreshold Then
+        MsgBox "ALERTE: Le produit """ & Name & """ (ID: " & ID & ") est en dessous du seuil d'alerte." & vbCrLf & _
+               "Quantité actuelle: " & CurrentQuantity & ", Seuil: " & AlertThreshold, _
+               vbExclamation, "Alerte de stock"
+    End If
+End Sub
+
+' Générer un rapport mensuel
+Public Sub GenerateMonthlyReport()
+    Dim LastRow As Long
+    Dim ReportRange As Range
+    Dim PivotCache As PivotCache
+    Dim PivotTable As PivotTable
+    Dim StartDate As Date
+    Dim EndDate As Date
+    
+    ' Préparer la feuille de rapport
+    wsReports.Cells.Clear
+    
+    ' Définir la période du rapport (mois en cours)
+    StartDate = DateSerial(Year(Date), Month(Date), 1)
+    EndDate = DateSerial(Year(Date), Month(Date) + 1, 0)
+    
+    ' Titre du rapport
+    wsReports.Range("A1").Value = "RAPPORT MENSUEL DE STOCK: " & Format(StartDate, "mmmm yyyy")
+    wsReports.Range("A1").Font.Size = 14
+    wsReports.Range("A1").Font.Bold = True
+    
+    ' Sous-titre avec la période
+    wsReports.Range("A2").Value = "Période: " & Format(StartDate, "dd/mm/yyyy") & " au " & Format(EndDate, "dd/mm/yyyy")
+    wsReports.Range("A2").Font.Italic = True
+    
+    ' Section 1: Tableau récapitulatif des stocks actuels
+    wsReports.Range("A4").Value = "ÉTAT DES STOCKS AU " & Format(Date, "dd/mm/yyyy")
+    wsReports.Range("A4").Font.Bold = True
+    
+    ' Copier les en-têtes
+    ws.Range("A1:E1").Copy wsReports.Range("A5")
+    
+    ' Copier les données
+    LastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    If LastRow > 1 Then
+        ws.Range("A2:E" & LastRow).Copy wsReports.Range("A6")
+    End If
+    
+    ' Formater le tableau
+    LastRow = wsReports.Cells(wsReports.Rows.Count, "A").End(xlUp).Row
+    Set ReportRange = wsReports.Range("A5:E" & LastRow)
+    
+    With ReportRange
+        .Borders.LineStyle = xlContinuous
+        .Borders.Weight = xlThin
+    End With
+    
+    ' Section 2: Produits en alerte
+    wsReports.Range("A" & (LastRow + 2)).Value = "PRODUITS SOUS LE SEUIL D'ALERTE"
+    wsReports.Range("A" & (LastRow + 2)).Font.Bold = True
+    wsReports.Range("A" & (LastRow + 2)).Font.Color = RGB(192, 0, 0)
+    
+    ' En-têtes pour les produits en alerte
+    wsReports.Range("A" & (LastRow + 3)).Value = "ID Produit"
+    wsReports.Range("B" & (LastRow + 3)).Value = "Nom"
+    wsReports.Range("C" & (LastRow + 3)).Value = "Quantité"
+    wsReports.Range("D" & (LastRow + 3)).Value = "Seuil d'alerte"
+    wsReports.Range("A" & (LastRow + 3) & ":D" & (LastRow + 3)).Font.Bold = True
+    
+    ' Copier les produits en alerte
+    Dim i As Integer
+    Dim j As Integer
+    j = LastRow + 4
+    
+    For i = 2 To LastRow
+        If ws.Cells(i, 3).Value <= ws.Cells(i, 4).Value Then
+            wsReports.Range("A" & j).Value = ws.Cells(i, 1).Value
+            wsReports.Range("B" & j).Value = ws.Cells(i, 2).Value
+            wsReports.Range("C" & j).Value = ws.Cells(i, 3).Value
+            wsReports.Range("D" & j).Value = ws.Cells(i, 4).Value
+            wsReports.Range("A" & j & ":D" & j).Interior.Color = RGB(255, 235, 156)
+            j = j + 1
+        End If
+    Next i
+    
+    ' Formater le tableau d'alerte
+    If j > LastRow + 4 Then
+        Set ReportRange = wsReports.Range("A" & (LastRow + 3) & ":D" & (j - 1))
+        
+        With ReportRange
+            .Borders.LineStyle = xlContinuous
+            .Borders.Weight = xlThin
+        End With
+    Else
+        wsReports.Range("A" & (LastRow + 4)).Value = "Aucun produit en alerte"
+        wsReports.Range("A" & (LastRow + 4)).Font.Italic = True
+    End If
+    
+    ' Section 3: Mouvements du mois
+    LastRow = wsReports.Cells(wsReports.Rows.Count, "A").End(xlUp).Row
+    wsReports.Range("A" & (LastRow + 2)).Value = "MOUVEMENTS DE STOCK DU MOIS"
+    wsReports.Range("A" & (LastRow + 2)).Font.Bold = True
+    
+    ' Créer un tableau croisé dynamique pour les mouvements
+    ' D'abord, filtrer les données d'historique pour le mois en cours
+    Dim historyLastRow As Long
+    historyLastRow = wsHistory.Cells(wsHistory.Rows.Count, "A").End(xlUp).Row
+    
+    If historyLastRow > 1 Then
+        ' Créer une plage temporaire pour les données filtrées
+        Dim tempSheet As Worksheet
+        Set tempSheet = ThisWorkbook.Sheets.Add
+        tempSheet.Name = "Temp_Report"
+        
+        ' Copier les en-têtes
+        wsHistory.Range("A1:G1").Copy tempSheet.Range("A1")
+        
+        ' Filtrer et copier les données du mois en cours
+        Dim k As Integer
+        j = 2
+        
+        For i = 2 To historyLastRow
+            If wsHistory.Cells(i, 1).Value >= StartDate And wsHistory.Cells(i, 1).Value <= EndDate Then
+                wsHistory.Range("A" & i & ":G" & i).Copy tempSheet.Range("A" & j)
+                j = j + 1
+            End If
+        Next i
+        
+        ' Créer le tableau croisé si des données existent
+        If j > 2 Then
+            ' Copier les données filtrées dans le rapport
+            tempSheet.Range("A1:G" & (j - 1)).Copy wsReports.Range("A" & (LastRow + 3))
+            
+            ' Créer un graphique pour les mouvements
+            Dim chartLastRow As Long
+            chartLastRow = LastRow + 3 + (j - 1)
+            
+            Dim chartRange As Range
+            Set chartRange = wsReports.Range("A" & (LastRow + 3) & ":G" & chartLastRow)
+            
+            Dim ChartObj As ChartObject
+            Set ChartObj = wsReports.ChartObjects.Add(Left:=400, Width:=450, Top:=50, Height:=250)
+            
+            With ChartObj.Chart
+                .SetSourceData Source:=chartRange
+                .ChartType = xlColumnClustered
+                .HasTitle = True
+                .ChartTitle.Text = "Mouvements de stock - " & Format(StartDate, "mmmm yyyy")
+                .HasLegend = True
+                .Legend.Position = xlLegendPositionBottom
+            End With
+        Else
+            wsReports.Range("A" & (LastRow + 3)).Value = "Aucun mouvement de stock pour ce mois"
+            wsReports.Range("A" & (LastRow + 3)).Font.Italic = True
+        End If
+        
+        ' Supprimer la feuille temporaire
+        Application.DisplayAlerts = False
+        tempSheet.Delete
+        Application.DisplayAlerts = True
+    Else
+        wsReports.Range("A" & (LastRow + 3)).Value = "Aucun historique de mouvement disponible"
+        wsReports.Range("A" & (LastRow + 3)).Font.Italic = True
+    End If
+    
+    ' Ajuster les colonnes
+    wsReports.Columns("A:G").AutoFit
+    
+    ' Afficher la feuille de rapport
+    wsReports.Activate
+    MsgBox "Rapport mensuel généré avec succès!", vbInformation, "Génération de rapport"
+End Sub
+
+' Visualiser les stocks critiques
+Public Sub VisualizeStockLevels()
+    Dim LastRow As Long
+    Dim ChartRange As Range
+    Dim ChartObj As ChartObject
+    
+    ' Créer une nouvelle feuille pour la visualisation
+    Dim wsChart As Worksheet
+    
+    ' Vérifier si la feuille existe déjà
+    On Error Resume Next
+    Set wsChart = ThisWorkbook.Sheets("Graphique_Stocks")
+    On Error GoTo 0
+    
+    If wsChart Is Nothing Then
+        Set wsChart = ThisWorkbook.Sheets.Add(After:=wsReports)
+        wsChart.Name = "Graphique_Stocks"
+    Else
+        wsChart.Cells.Clear
+        wsChart.ChartObjects.Delete
+    End If
+    
+    ' Titre
+    wsChart.Range("A1").Value = "VISUALISATION DES NIVEAUX DE STOCK"
+    wsChart.Range("A1").Font.Size = 14
+    wsChart.Range("A1").Font.Bold = True
+    
+    ' Sous-titre
+    wsChart.Range("A2").Value = "Date: " & Format(Date, "dd/mm/yyyy")
+    wsChart.Range("A2").Font.Italic = True
+    
+    ' Copier les données pertinentes
+    wsChart.Range("A4").Value = "ID Produit"
+    wsChart.Range("B4").Value = "Nom"
+    wsChart.Range("C4").Value = "Quantité"
+    wsChart.Range("D4").Value = "Seuil d'alerte"
+    wsChart.Range("E4").Value = "Statut"
+    wsChart.Range("A4:E4").Font.Bold = True
+    
+    LastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    Dim i As Integer
+    Dim j As Integer
+    j = 5
+    
+    For i = 2 To LastRow
+        wsChart.Range("A" & j).Value = ws.Cells(i, 1).Value
+        wsChart.Range("B" & j).Value = ws.Cells(i, 2).Value
+        wsChart.Range("C" & j).Value = ws.Cells(i, 3).Value
+        wsChart.Range("D" & j).Value = ws.Cells(i, 4).Value
+        
+        ' Déterminer le statut
+        If ws.Cells(i, 3).Value <= ws.Cells(i, 4).Value Then
+            wsChart.Range("E" & j).Value = "CRITIQUE"
+            wsChart.Range("E" & j).Font.Color = RGB(255, 0, 0)
+        ElseIf ws.Cells(i, 3).Value <= ws.Cells(i, 4).Value * 1.5 Then
+            wsChart.Range("E" & j).Value = "ATTENTION"
+            wsChart.Range("E" & j).Font.Color = RGB(255, 192, 0)
+        Else
+            wsChart.Range("E" & j).Value = "NORMAL"
+            wsChart.Range("E" & j).Font.Color = RGB(0, 176, 80)
+        End If
+        
+        j = j + 1
+    Next i
+    
+    ' Formater le tableau
+    Set ChartRange = wsChart.Range("A4:E" & (j - 1))
+    
+    With ChartRange
+        .Borders.LineStyle = xlContinuous
+        .Borders.Weight = xlThin
+    End With
+    
+    ' Créer un graphique à barres comparant stock actuel et seuil
+    Set ChartObj = wsChart.ChartObjects.Add(Left:=50, Width:=700, Top:=250, Height:=350)
+    
+    With ChartObj.Chart
+        .SetSourceData Source:=wsChart.Range("B" & 5 & ":D" & (j - 1))
+        .ChartType = xlColumnClustered
+        .HasTitle = True
+        .ChartTitle.Text = "Comparaison des stocks actuels et des seuils d'alerte"
+        .HasLegend = True
+        .Legend.Position = xlLegendPositionBottom
+        
+        ' Configurer les axes
+        .Axes(xlCategory).HasTitle = True
+        .Axes(xlCategory).AxisTitle.Text = "Produits"
+        .Axes(xlValue).HasTitle = True
+        .Axes(xlValue).AxisTitle.Text = "Quantité"
+        
+        ' Colorer les séries
+        .SeriesCollection(1).Format.Fill.ForeColor.RGB = RGB(91, 155, 213)
+        .SeriesCollection(2).Format.Fill.ForeColor.RGB = RGB(255, 192, 0)
+    End With
+    
+    ' Ajuster les colonnes
+    wsChart.Columns("A:E").AutoFit
+    wsChart.Columns("B").ColumnWidth = 30
+    
+    ' Afficher la feuille de graphique
+    wsChart.Activate
+    MsgBox "Visualisation des stocks générée avec succès!", vbInformation, "Visualisation"
+End Sub

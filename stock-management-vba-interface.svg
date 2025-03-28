@@ -1,0 +1,108 @@
+<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond du formulaire -->
+  <rect x="0" y="0" width="800" height="600" fill="#f0f0f0" />
+  <rect x="10" y="10" width="780" height="580" rx="10" fill="#ffffff" stroke="#cccccc" stroke-width="1" />
+  
+  <!-- Titre -->
+  <rect x="10" y="10" width="780" height="50" rx="10" fill="#4472C4" />
+  <text x="400" y="42" font-family="Arial" font-size="22" font-weight="bold" fill="white" text-anchor="middle">GESTION DES STOCKS</text>
+  
+  <!-- Section Recherche -->
+  <rect x="30" y="80" width="740" height="60" rx="5" fill="#E6E6E6" stroke="#D9D9D9" stroke-width="1" />
+  <text x="50" y="105" font-family="Arial" font-size="14" fill="#333333">Rechercher un produit :</text>
+  <rect x="230" y="90" width="400" height="30" rx="5" fill="white" stroke="#BBBBBB" stroke-width="1" />
+  <rect x="650" y="90" width="100" height="30" rx="5" fill="#4472C4" stroke="#2F528F" stroke-width="1" />
+  <text x="700" y="110" font-family="Arial" font-size="14" fill="white" text-anchor="middle">Rechercher</text>
+  
+  <!-- Section Ajout/Modification -->
+  <rect x="30" y="160" width="460" height="280" rx="5" fill="#F9F9F9" stroke="#D9D9D9" stroke-width="1" />
+  <text x="50" y="185" font-family="Arial" font-size="16" font-weight="bold" fill="#333333">Informations Produit</text>
+  
+  <!-- Champs du formulaire -->
+  <text x="50" y="215" font-family="Arial" font-size="14" fill="#333333">ID Produit :</text>
+  <rect x="160" y="200" width="300" height="25" rx="5" fill="white" stroke="#BBBBBB" stroke-width="1" />
+  
+  <text x="50" y="250" font-family="Arial" font-size="14" fill="#333333">Nom :</text>
+  <rect x="160" y="235" width="300" height="25" rx="5" fill="white" stroke="#BBBBBB" stroke-width="1" />
+  
+  <text x="50" y="285" font-family="Arial" font-size="14" fill="#333333">Quantité :</text>
+  <rect x="160" y="270" width="300" height="25" rx="5" fill="white" stroke="#BBBBBB" stroke-width="1" />
+  
+  <text x="50" y="320" font-family="Arial" font-size="14" fill="#333333">Seuil d'alerte :</text>
+  <rect x="160" y="305" width="300" height="25" rx="5" fill="white" stroke="#BBBBBB" stroke-width="1" />
+  
+  <text x="50" y="355" font-family="Arial" font-size="14" fill="#333333">Date de mise à jour :</text>
+  <rect x="160" y="340" width="300" height="25" rx="5" fill="white" stroke="#BBBBBB" stroke-width="1" />
+  
+  <!-- Section des boutons d'action -->
+  <rect x="50" y="380" width="100" height="35" rx="5" fill="#4472C4" stroke="#2F528F" stroke-width="1" />
+  <text x="100" y="403" font-family="Arial" font-size="14" fill="white" text-anchor="middle">Ajouter</text>
+  
+  <rect x="170" y="380" width="100" height="35" rx="5" fill="#4472C4" stroke="#2F528F" stroke-width="1" />
+  <text x="220" y="403" font-family="Arial" font-size="14" fill="white" text-anchor="middle">Modifier</text>
+  
+  <rect x="290" y="380" width="100" height="35" rx="5" fill="#E74C3C" stroke="#C0392B" stroke-width="1" />
+  <text x="340" y="403" font-family="Arial" font-size="14" fill="white" text-anchor="middle">Supprimer</text>
+  
+  <!-- Section d'alerte et information -->
+  <rect x="510" y="160" width="260" height="130" rx="5" fill="#FCF8E3" stroke="#FAEBCC" stroke-width="1" />
+  <text x="530" y="185" font-family="Arial" font-size="16" font-weight="bold" fill="#8A6D3B">Alertes Stock</text>
+  <text x="530" y="215" font-family="Arial" font-size="13" fill="#8A6D3B">Produits sous le seuil d'alerte :</text>
+  <rect x="530" y="225" width="220" height="45" rx="3" fill="white" stroke="#FAEBCC" stroke-width="1" />
+  
+  <!-- Section de rapport -->
+  <rect x="510" y="310" width="260" height="130" rx="5" fill="#D9EDF7" stroke="#BCE8F1" stroke-width="1" />
+  <text x="530" y="335" font-family="Arial" font-size="16" font-weight="bold" fill="#31708F">Rapports</text>
+  
+  <rect x="530" y="350" width="220" height="35" rx="5" fill="#5BC0DE" stroke="#46B8DA" stroke-width="1" />
+  <text x="640" y="373" font-family="Arial" font-size="14" fill="white" text-anchor="middle">Générer rapport mensuel</text>
+  
+  <rect x="530" y="395" width="220" height="35" rx="5" fill="#5BC0DE" stroke="#46B8DA" stroke-width="1" />
+  <text x="640" y="418" font-family="Arial" font-size="14" fill="white" text-anchor="middle">Visualiser stocks critiques</text>
+  
+  <!-- Tableau des mouvements récents -->
+  <rect x="30" y="460" width="740" height="110" rx="5" fill="#F9F9F9" stroke="#D9D9D9" stroke-width="1" />
+  <text x="50" y="485" font-family="Arial" font-size="16" font-weight="bold" fill="#333333">Historique des mouvements récents</text>
+  
+  <!-- En-têtes du tableau -->
+  <rect x="50" y="495" width="100" height="25" fill="#E6E6E6" stroke="#D9D9D9" stroke-width="1" />
+  <text x="100" y="512" font-family="Arial" font-size="12" fill="#333333" text-anchor="middle">Date</text>
+  
+  <rect x="150" y="495" width="150" height="25" fill="#E6E6E6" stroke="#D9D9D9" stroke-width="1" />
+  <text x="225" y="512" font-family="Arial" font-size="12" fill="#333333" text-anchor="middle">Produit</text>
+  
+  <rect x="300" y="495" width="80" height="25" fill="#E6E6E6" stroke="#D9D9D9" stroke-width="1" />
+  <text x="340" y="512" font-family="Arial" font-size="12" fill="#333333" text-anchor="middle">Mouvement</text>
+  
+  <rect x="380" y="495" width="80" height="25" fill="#E6E6E6" stroke="#D9D9D9" stroke-width="1" />
+  <text x="420" y="512" font-family="Arial" font-size="12" fill="#333333" text-anchor="middle">Quantité</text>
+  
+  <rect x="460" y="495" width="100" height="25" fill="#E6E6E6" stroke="#D9D9D9" stroke-width="1" />
+  <text x="510" y="512" font-family="Arial" font-size="12" fill="#333333" text-anchor="middle">Utilisateur</text>
+  
+  <rect x="560" y="495" width="210" height="25" fill="#E6E6E6" stroke="#D9D9D9" stroke-width="1" />
+  <text x="665" y="512" font-family="Arial" font-size="12" fill="#333333" text-anchor="middle">Commentaire</text>
+  
+  <!-- Ligne d'exemple dans le tableau -->
+  <rect x="50" y="520" width="100" height="25" fill="white" stroke="#D9D9D9" stroke-width="1" />
+  <text x="65" y="537" font-family="Arial" font-size="12" fill="#333333">23/03/2025</text>
+  
+  <rect x="150" y="520" width="150" height="25" fill="white" stroke="#D9D9D9" stroke-width="1" />
+  <text x="165" y="537" font-family="Arial" font-size="12" fill="#333333">Écran LCD 24"</text>
+  
+  <rect x="300" y="520" width="80" height="25" fill="white" stroke="#D9D9D9" stroke-width="1" />
+  <text x="315" y="537" font-family="Arial" font-size="12" fill="#333333">Sortie</text>
+  
+  <rect x="380" y="520" width="80" height="25" fill="white" stroke="#D9D9D9" stroke-width="1" />
+  <text x="415" y="537" font-family="Arial" font-size="12" fill="#333333" text-anchor="middle">-2</text>
+  
+  <rect x="460" y="520" width="100" height="25" fill="white" stroke="#D9D9D9" stroke-width="1" />
+  <text x="475" y="537" font-family="Arial" font-size="12" fill="#333333">Martin D.</text>
+  
+  <rect x="560" y="520" width="210" height="25" fill="white" stroke="#D9D9D9" stroke-width="1" />
+  <text x="575" y="537" font-family="Arial" font-size="12" fill="#333333">Livraison client #A2589</text>
+  
+  <!-- Bouton fermer -->
+  <rect x="670" y="550" width="100" height="30" rx="5" fill="#6C757D" stroke="#5A6268" stroke-width="1" />
+  <text x="720" y="570" font-family="Arial" font-size="14" fill="white" text-anchor="middle">Fermer</text>
+</svg>

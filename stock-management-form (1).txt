@@ -1,0 +1,330 @@
+' Code pour le formulaire VBA de Gestion des Stocks
+' Formulaire : frmStockManagement
+
+Option Explicit
+
+' Variables du formulaire
+Dim alertProducts As Collection
+
+' Initialisation du formulaire
+Private Sub UserForm_Initialize()
+    ' Centrer le formulaire
+    Me.StartUpPosition = 0
+    Me.Left = Application.Left + (0.5 * Application.Width) - (0.5 * Me.Width)
+    Me.Top = Application.Top + (0.5 * Application.Height) - (0.5 * Me.Height)
+    
+    ' Définir la taille du formulaire
+    Me.Width = 800
+    Me.Height = 600
+    
+    ' Initialiser la collection pour les produits en alerte
+    Set alertProducts = New Collection
+    
+    ' Remplir le formulaire avec les données actuelles
+    RefreshProductList
+    RefreshHistoryList
+    RefreshAlertList
+    
+    ' Effacer les champs de saisie
+    ClearInputFields
+End Sub
+
+' Actualiser la liste des produits dans le tableau
+Private Sub RefreshProductList()
+    Dim ws As Worksheet
+    Dim LastRow As Long
+    Dim i As Integer
+    
+    ' Récupérer la feuille de stock
+    Set ws = ThisWorkbook.Sheets("Stock")
+    
+    ' Effacer le contenu actuel
+    Me.lstProducts.Clear
+    
+    ' Ajouter les en-têtes
+    Me.lstProducts.ColumnCount = 5
+    Me.lstProducts.ColumnWidths = "60;200;60;60;100"
+    
+    ' Trouver la dernière ligne utilisée
+    LastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Ajouter chaque produit à la liste
+    For i = 2 To LastRow
+        Me.lstProducts.AddItem ws.Cells(i, 1).Value
+        Me.lstProducts.List(Me.lstProducts.ListCount - 1, 1) = ws.Cells(i, 2).Value
+        Me.lstProducts.List(Me.lstProducts.ListCount - 1, 2) = ws.Cells(i, 3).Value
+        Me.lstProducts.List(Me.lstProducts.ListCount - 1, 3) = ws.Cells(i, 4).Value
+        Me.lstProducts.List(Me.lstProducts.ListCount - 1, 4) = Format(ws.Cells(i, 5).Value, "dd/mm/yyyy")
+    Next i
+End Sub
+
+' Actualiser la liste des mouvements récents
+Private Sub RefreshHistoryList()
+    Dim wsHistory As Worksheet
+    Dim LastRow As Long
+    Dim i As Integer
+    Dim MaxRows As Integer
+    
+    ' Récupérer la feuille d'historique
+    Set wsHistory = ThisWorkbook.Sheets("Historique")
+    
+    ' Effacer le contenu actuel
+    Me.lstHistory.Clear
+    
+    ' Ajouter les en-têtes
+    Me.lstHistory.ColumnCount = 6
+    Me.lstHistory.ColumnWidths = "100;150;80;60;100;200"
+    
+    ' Trouver la dernière ligne utilisée
+    LastRow = wsHistory.Cells(wsHistory.Rows.Count, "A").End(xlUp).Row
+    
+    ' Limiter à 10 dernières entrées
+    MaxRows = 10
+    If LastRow - 1 < MaxRows Then MaxRows = LastRow - 1
+    
+    ' Ajouter les entrées récentes à la liste
+    For i = LastRow To LastRow - MaxRows + 1 Step -1
+        If i > 1 Then
+            Me.lstHistory.AddItem Format(wsHistory.Cells(i, 1).Value, "dd/mm/yyyy")
+            Me.lstHistory.List(Me.lstHistory.ListCount - 1, 1) = wsHistory.Cells(i, 3).Value
+            Me.lstHistory.List(Me.lstHistory.ListCount - 1, 2) = wsHistory.Cells(i, 4).Value
+            Me.lstHistory.List(Me.lstHistory.ListCount - 1, 3) = wsHistory.Cells(i, 5).Value
+            Me.lstHistory.List(Me.lstHistory.ListCount - 1, 4) = wsHistory.Cells(i, 6).Value
+            Me.lstHistory.List(Me.lstHistory.ListCount - 1, 5) = wsHistory.Cells(i, 7).Value
+        End If
+    Next i
+End Sub
+
+' Actualiser la liste des produits en alerte
+Private Sub RefreshAlertList()
+    Dim ws As Worksheet
+    Dim LastRow As Long
+    Dim i As Integer
+    
+    ' Récupérer la feuille de stock
+    Set ws = ThisWorkbook.Sheets("Stock")
+    
+    ' Effacer le contenu actuel
+    Me.lstAlerts.Clear
+    Set alertProducts = New Collection
+    
+    ' Trouver la dernière ligne utilisée
+    LastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Vérifier chaque produit
+    For i = 2 To LastRow
+        If ws.Cells(i, 3).Value <= ws.Cells(i, 4).Value Then
+            ' Ajouter à la liste d'alerte
+            Me.lstAlerts.AddItem ws.Cells(i, 2).Value & " (" & ws.Cells(i, 3).Value & "/" & ws.Cells(i, 4).Value & ")"
+            
+            ' Ajouter à la collection (pour référence ultérieure)
+            alertProducts.Add ws.Cells(i, 1).Value
+        End If
+    Next i
+    
+    ' Message si aucun produit en alerte
+    If Me.lstAlerts.ListCount = 0 Then
+        Me.lstAlerts.AddItem "Aucun produit sous le seuil d'alerte"
+    End If
+End Sub
+
+' Effacer les champs de saisie
+Private Sub ClearInputFields()
+    Me.txtID.Value = ""
+    Me.txtName.Value = ""
+    Me.txtQuantity.Value = ""
+    Me.txtAlertThreshold.Value = ""
+    Me.txtUpdateDate.Value = Format(Date, "dd/mm/yyyy")
+    Me.txtComment.Value = ""
+End Sub
+
+' Rechercher un produit
+Private Sub btnSearch_Click()
+    Dim SearchValue As String
+    Dim FoundCell As Range
+    Dim ws As Worksheet
+    
+    ' Récupérer la valeur de recherche
+    SearchValue = Me.txtSearch.Value
+    
+    If Trim(SearchValue) = "" Then
+        MsgBox "Veuillez entrer une valeur de recherche.", vbExclamation, "Recherche"
+        Exit Sub
+    End If
+    
+    ' Rechercher le produit
+    Set ws = ThisWorkbook.Sheets("Stock")
+    
+    ' Rechercher d'abord par ID
+    Set FoundCell = ws.Range("A:A").Find(SearchValue, LookIn:=xlValues, LookAt:=xlWhole)
+    
+    ' Si non trouvé, rechercher par nom
+    If FoundCell Is Nothing Then
+        Set FoundCell = ws.Range("B:B").Find(SearchValue, LookIn:=xlValues, LookAt:=xlPart)
+    End If
+    
+    If FoundCell Is Nothing Then
+        MsgBox "Aucun produit trouvé pour '" & SearchValue & "'.", vbInformation, "Recherche"
+    Else
+        ' Sélectionner le produit dans la liste
+        Dim i As Integer
+        For i = 0 To Me.lstProducts.ListCount - 1
+            If Me.lstProducts.List(i, 0) = ws.Cells(FoundCell.Row, 1).Value Then
+                Me.lstProducts.Selected(i) = True
+                Exit For
+            End If
+        Next i
+        
+        ' Remplir les champs avec les données du produit trouvé
+        Me.txtID.Value = ws.Cells(FoundCell.Row, 1).Value
+        Me.txtName.Value = ws.Cells(FoundCell.Row, 2).Value
+        Me.txtQuantity.Value = ws.Cells(FoundCell.Row, 3).Value
+        Me.txtAlertThreshold.Value = ws.Cells(FoundCell.Row, 4).Value
+        Me.txtUpdateDate.Value = Format(ws.Cells(FoundCell.Row, 5).Value, "dd/mm/yyyy")
+    End If
+End Sub
+
+' Sélectionner un produit dans la liste
+Private Sub lstProducts_Click()
+    If Me.lstProducts.ListIndex >= 0 Then
+        Me.txtID.Value = Me.lstProducts.List(Me.lstProducts.ListIndex, 0)
+        Me.txtName.Value = Me.lstProducts.List(Me.lstProducts.ListIndex, 1)
+        Me.txtQuantity.Value = Me.lstProducts.List(Me.lstProducts.ListIndex, 2)
+        Me.txtAlertThreshold.Value = Me.lstProducts.List(Me.lstProducts.ListIndex, 3)
+        Me.txtUpdateDate.Value = Me.lstProducts.List(Me.lstProducts.ListIndex, 4)
+    End If
+End Sub
+
+' Ajouter un nouveau produit
+Private Sub btnAdd_Click()
+    Dim ID As String
+    Dim Name As String
+    Dim Quantity As Integer
+    Dim AlertThreshold As Integer
+    
+    ' Validation des entrées
+    If Trim(Me.txtID.Value) = "" Then
+        MsgBox "L'ID du produit est obligatoire.", vbExclamation, "Erreur"
+        Me.txtID.SetFocus
+        Exit Sub
+    End If
+    
+    If Trim(Me.txtName.Value) = "" Then
+        MsgBox "Le nom du produit est obligatoire.", vbExclamation, "Erreur"
+        Me.txtName.SetFocus
+        Exit Sub
+    End If
+    
+    ' Récupérer les valeurs
+    ID = Trim(Me.txtID.Value)
+    Name = Trim(Me.txtName.Value)
+    
+    ' Vérifier que les champs numériques contiennent des nombres
+    If Not IsNumeric(Me.txtQuantity.Value) Then
+        MsgBox "La quantité doit être un nombre entier.", vbExclamation, "Erreur"
+        Me.txtQuantity.SetFocus
+        Exit Sub
+    End If
+    
+    If Not IsNumeric(Me.txtAlertThreshold.Value) Then
+        MsgBox "Le seuil d'alerte doit être un nombre entier.", vbExclamation, "Erreur"
+        Me.txtAlertThreshold.SetFocus
+        Exit Sub
+    End If
+    
+    Quantity = CInt(Me.txtQuantity.Value)
+    AlertThreshold = CInt(Me.txtAlertThreshold.Value)
+    
+    ' Ajouter le produit
+    AddProduct ID, Name, Quantity, AlertThreshold
+    
+    ' Actualiser les listes
+    RefreshProductList
+    RefreshHistoryList
+    RefreshAlertList
+    
+    ' Effacer les champs
+    ClearInputFields
+    
+    MsgBox "Produit ajouté avec succès !", vbInformation, "Ajout de produit"
+End Sub
+
+' Modifier un produit existant
+Private Sub btnModify_Click()
+    Dim ID As String
+    Dim NewQuantity As Integer
+    Dim Reason As String
+    
+    ' Validation des entrées
+    If Trim(Me.txtID.Value) = "" Then
+        MsgBox "Veuillez d'abord sélectionner un produit.", vbExclamation, "Erreur"
+        Exit Sub
+    End If
+    
+    If Not IsNumeric(Me.txtQuantity.Value) Then
+        MsgBox "La quantité doit être un nombre entier.", vbExclamation, "Erreur"
+        Me.txtQuantity.SetFocus
+        Exit Sub
+    End If
+    
+    ID = Trim(Me.txtID.Value)
+    NewQuantity = CInt(Me.txtQuantity.Value)
+    
+    ' Demander un commentaire pour le mouvement
+    Reason = Trim(Me.txtComment.Value)
+    If Reason = "" Then
+        Reason = InputBox("Commentaire pour ce mouvement de stock :", "Commentaire", "Modification manuelle")
+    End If
+    
+    ' Mettre à jour le produit
+    UpdateProduct ID, NewQuantity, Reason
+    
+    ' Actualiser les listes
+    RefreshProductList
+    RefreshHistoryList
+    RefreshAlertList
+    
+    ' Effacer les champs
+    ClearInputFields
+    
+    MsgBox "Produit mis à jour avec succès !", vbInformation, "Modification de produit"
+End Sub
+
+' Supprimer un produit
+Private Sub btnDelete_Click()
+    Dim ID As String
+    
+    ' Validation des entrées
+    If Trim(Me.txtID.Value) = "" Then
+        MsgBox "Veuillez d'abord sélectionner un produit.", vbExclamation, "Erreur"
+        Exit Sub
+    End If
+    
+    ID = Trim(Me.txtID.Value)
+    
+    ' Supprimer le produit
+    DeleteProduct ID
+    
+    ' Actualiser les listes
+    RefreshProductList
+    RefreshHistoryList
+    RefreshAlertList
+    
+    ' Effacer les champs
+    ClearInputFields
+End Sub
+
+' Générer un rapport mensuel
+Private Sub btnMonthlyReport_Click()
+    GenerateMonthlyReport
+End Sub
+
+' Visualiser les stocks critiques
+Private Sub btnVisualizeStocks_Click()
+    VisualizeStockLevels
+End Sub
+
+' Fermer le formulaire
+Private Sub btnClose_Click()
+    Unload Me
+End Sub

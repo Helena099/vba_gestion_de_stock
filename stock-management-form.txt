@@ -1,0 +1,88 @@
+' Code pour le formulaire VBA de Gestion des Stocks
+' Formulaire : frmStockManagement
+
+Option Explicit
+
+' Variables du formulaire
+Dim alertProducts As Collection
+
+' Initialisation du formulaire
+Private Sub UserForm_Initialize()
+    ' Centrer le formulaire
+    Me.StartUpPosition = 0
+    Me.Left = Application.Left + (0.5 * Application.Width) - (0.5 * Me.Width)
+    Me.Top = Application.Top + (0.5 * Application.Height) - (0.5 * Me.Height)
+    
+    ' Définir la taille du formulaire
+    Me.Width = 800
+    Me.Height = 600
+    
+    ' Initialiser la collection pour les produits en alerte
+    Set alertProducts = New Collection
+    
+    ' Remplir le formulaire avec les données actuelles
+    RefreshProductList
+    RefreshHistoryList
+    RefreshAlertList
+    
+    ' Effacer les champs de saisie
+    ClearInputFields
+End Sub
+
+' Actualiser la liste des produits dans le tableau
+Private Sub RefreshProductList()
+    Dim ws As Worksheet
+    Dim LastRow As Long
+    Dim i As Integer
+    
+    ' Récupérer la feuille de stock
+    Set ws = ThisWorkbook.Sheets("Stock")
+    
+    ' Effacer le contenu actuel
+    Me.lstProducts.Clear
+    
+    ' Ajouter les en-têtes
+    Me.lstProducts.ColumnCount = 5
+    Me.lstProducts.ColumnWidths = "60;200;60;60;100"
+    
+    ' Trouver la dernière ligne utilisée
+    LastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Ajouter chaque produit à la liste
+    For i = 2 To LastRow
+        Me.lstProducts.AddItem ws.Cells(i, 1).Value
+        Me.lstProducts.List(Me.lstProducts.ListCount - 1, 1) = ws.Cells(i, 2).Value
+        Me.lstProducts.List(Me.lstProducts.ListCount - 1, 2) = ws.Cells(i, 3).Value
+        Me.lstProducts.List(Me.lstProducts.ListCount - 1, 3) = ws.Cells(i, 4).Value
+        Me.lstProducts.List(Me.lstProducts.ListCount - 1, 4) = Format(ws.Cells(i, 5).Value, "dd/mm/yyyy")
+    Next i
+End Sub
+
+' Actualiser la liste des mouvements récents
+Private Sub RefreshHistoryList()
+    Dim wsHistory As Worksheet
+    Dim LastRow As Long
+    Dim i As Integer
+    Dim MaxRows As Integer
+    
+    ' Récupérer la feuille d'historique
+    Set wsHistory = ThisWorkbook.Sheets("Historique")
+    
+    ' Effacer le contenu actuel
+    Me.lstHistory.Clear
+    
+    ' Ajouter les en-têtes
+    Me.lstHistory.ColumnCount = 6
+    Me.lstHistory.ColumnWidths = "100;150;80;60;100;200"
+    
+    ' Trouver la dernière ligne utilisée
+    LastRow = wsHistory.Cells(wsHistory.Rows.Count, "A").End(xlUp).Row
+    
+    ' Limiter à 10 dernières entrées
+    MaxRows = 10
+    If LastRow - 1 < MaxRows Then MaxRows = LastRow - 1
+    
+    ' Ajouter les entrées récentes à la liste
+    For i = LastRow To LastRow - MaxRows + 1 Step -1
+        If i > 1 Then
+            Me.lstHistory.AddItem Format(wsHistory.Cells(i, 1).Value,
